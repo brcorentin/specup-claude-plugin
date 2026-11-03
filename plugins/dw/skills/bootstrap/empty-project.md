@@ -5,7 +5,8 @@
 ## A. Setup
 
 1. Linear: list teams, ask which one. Map statuses and plan labels exactly as in `existing-repo.md` section B (statuses checklist, labels `dw:story`, `dw:ticket`, `dw:escalated`; app labels come later).
-2. Forge: parse `git remote get-url <remote>` (owner, repo, host → type). Base branch: as computed in SKILL.md precondition 4. Record whether the remote base branch **exists** (`git ls-remote --heads <remote> <baseBranch>`): it decides how step E publishes.
+2. **Linear Project** for the Foundations work, chosen as in `existing-repo.md` B.2, without the "no default Project" option: **use an existing Project** (picked from the team's list) or **create a new one** (proposed name: "Foundations" translated into `language`, e.g. "Fondations"; description written after gate 1 from the vision). It becomes `linear.project`. Nothing is created before gate 3.
+3. Forge: parse `git remote get-url <remote>` (owner, repo, host → type). Base branch: as computed in SKILL.md precondition 4. Record whether the remote base branch **exists** (`git ls-remote --heads <remote> <baseBranch>`): it decides how step E publishes.
 
 ## B. Discovery — gate 1
 
@@ -17,9 +18,9 @@ Spawn `dw:em` with `mode: architecture` and `language: <user's language>`. Relay
 
 ## D. Provisional config and Foundations — gate 3
 
-1. Write the provisional `.claude/workflow.json`: `language`, `linear`, `forge`, `packageManager` and `monorepo.tool` from the approved ADRs, `env` from the ADRs (e.g. `docker compose up -d --wait`) or `null`, **`apps: []`**, `qa.maxIterations: 3`, `docs.root: "docs"`. Write `.claude/settings.json` from `${CLAUDE_PLUGIN_ROOT}/reference/settings.template.json` (no app commands yet) and a short `CLAUDE.md` (points to `docs/INDEX.md`, dw commands). Show these three files before writing them (part of this gate).
-2. Create the Linear labels.
-3. Spawn `dw:em` with `mode: foundations`. Relay until `draft_ready` (Linear Project "Foundations" named in `language`, tickets in Backlog with blocked-by relations, `docs/specs/<project-slug>.md`). Gate. Wait for `done` (tickets in `todo`).
+1. Write the provisional `.claude/workflow.json`: `language`, `linear` (with `linear.project` = the chosen Project), `forge`, `packageManager` and `monorepo.tool` from the approved ADRs, `env` from the ADRs (e.g. `docker compose up -d --wait`) or `null`, **`apps: []`**, `qa.maxIterations: 3`, `docs.root: "docs"`. Write `.claude/settings.json` from `${CLAUDE_PLUGIN_ROOT}/reference/settings.template.json` (no app commands yet) and a short `CLAUDE.md` (points to `docs/INDEX.md`, dw commands). Show these three files, and the Project to create (name, description) or the existing one chosen, before writing anything (part of this gate).
+2. Create the Linear Project if the user chose "create" (report its URL), then the labels.
+3. Spawn `dw:em` with `mode: foundations` and `project: <linear.project>`. Relay until `draft_ready` (story and tickets in that Project, in Backlog with blocked-by relations, `docs/specs/<project-slug>.md`). Gate. Wait for `done` (tickets in `todo`).
 
 ## E. Publish
 
@@ -33,5 +34,7 @@ Tell the user, in order:
 2. Complete the Linear checklist if states are missing.
 3. Run `/dw:run` to build the Foundations tickets one by one; review and merge each PR.
 4. When the Foundations Project is merged, run `/dw:bootstrap` again: it switches to existing-repo mode and fills `apps[]`, commands and module docs.
+
+When starting the first feature, `/dw:epic` creates its own Project and offers to make it the new `linear.project`.
 
 Notify: `node "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/notify.mjs" "dw: bootstrap done" "Foundations planned in Linear"`.

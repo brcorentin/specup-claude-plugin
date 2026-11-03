@@ -1,6 +1,6 @@
 ---
 name: bootstrap
-description: Set up the dw workflow in the current repository. Existing monorepo → scan and generate CLAUDE.md, .claude/workflow.json, .claude/settings.json, docs/ and Linear labels. Empty project → product discovery, architecture ADRs, human gate, then a Linear "Foundations" Project.
+description: Set up the dw workflow in the current repository. Existing monorepo → scan and generate CLAUDE.md, .claude/workflow.json, .claude/settings.json, docs/, Linear labels, and pick or create the working Linear Project. Empty project → product discovery, architecture ADRs, human gate, then Foundations tickets in a Linear Project picked or created by the user.
 argument-hint: "[--mode existing|empty]"
 disable-model-invocation: true
 ---

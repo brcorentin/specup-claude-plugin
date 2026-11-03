@@ -21,15 +21,20 @@ Collect facts; cite the file each fact comes from. Do not guess: unknown stays `
 
 ## B. Linear
 
-1. List teams; ask the user which one (recommend the only one if there is one). Optionally ask for a default Project (`linear.project`, default `null`).
-2. List the team's workflow states. Map each role of `${CLAUDE_PLUGIN_ROOT}/reference/state-machine.md` to an existing state: exact name first, then obvious equivalents (e.g. `In Review` for `readyForReview` only if the user confirms). Default names: Backlog, Product Ready, Todo, In Progress, In QA, QA Failed, Ready for Review, Done.
-3. Missing states: if a Linear tool can create workflow states, plan to create them. Otherwise prepare a checklist for the user: *Linear → Settings → Teams → <team> → Workflow* → add each missing state in the right category (Product Ready: Backlog or Unstarted; In QA, QA Failed, Ready for Review: Started). The run cannot start until they exist.
-4. Labels: plan to create the missing ones: `dw:story`, `dw:ticket`, `dw:escalated`, and one `app:<name>` per app (team labels).
-5. Recommend in the checklist: GitHub integration enabled with "move to Done on PR merge", and "auto-close parent issues".
+1. List teams; ask the user which one (recommend the only one if there is one).
+2. **Linear Project** — the first working Project, stored in `linear.project` (default scope of `/dw:run`). List the team's Projects (name, status, issue count) and ask the user to choose one of:
+   - **use an existing Project**: pick it from the list;
+   - **create a new Project**: ask for its name (propose one from the README or the repo name) and write a 2–4 line description in `language` (purpose, link to `docs/product/vision.md`). Nothing is created before the gate (step E);
+   - **no default Project**: `linear.project: null`, `/dw:run` then covers every Project of the team.
+   In update mode, propose the current `linear.project` as the default answer. Later `/dw:epic` runs create one Project per feature and offer to switch `linear.project` to it.
+3. List the team's workflow states. Map each role of `${CLAUDE_PLUGIN_ROOT}/reference/state-machine.md` to an existing state: exact name first, then obvious equivalents (e.g. `In Review` for `readyForReview` only if the user confirms). Default names: Backlog, Product Ready, Todo, In Progress, In QA, QA Failed, Ready for Review, Done.
+4. Missing states: if a Linear tool can create workflow states, plan to create them. Otherwise prepare a checklist for the user: *Linear → Settings → Teams → <team> → Workflow* → add each missing state in the right category (Product Ready: Backlog or Unstarted; In QA, QA Failed, Ready for Review: Started). The run cannot start until they exist.
+5. Labels: plan to create the missing ones: `dw:story`, `dw:ticket`, `dw:escalated`, and one `app:<name>` per app (team labels).
+6. Recommend in the checklist: GitHub integration enabled with "move to Done on PR merge", and "auto-close parent issues".
 
 ## C. Build the proposal (nothing written yet)
 
-1. **`.claude/workflow.json`**: per the schema, `language` = the user's language, Linear mapping, forge, package manager, monorepo tool, env, apps with commands, `qa.maxIterations: 3`, `docs.root: "docs"`. Validate it mentally against `workflow.schema.json` (all required keys, no extra keys).
+1. **`.claude/workflow.json`**: per the schema, `language` = the user's language, Linear mapping (`linear.project` = the chosen or planned Project name, or `null`), forge, package manager, monorepo tool, env, apps with commands, `qa.maxIterations: 3`, `docs.root: "docs"`. Validate it mentally against `workflow.schema.json` (all required keys, no extra keys).
 2. **`.claude/settings.json`**: start from `${CLAUDE_PLUGIN_ROOT}/reference/settings.template.json`, replace `{{remote}}`, `{{baseBranch}}`, `{{packageManager}}`; add the allow and deny rules of the adapter's **Allowlist** section (`${CLAUDE_PLUGIN_ROOT}/reference/forges/<forge.type>.md`, none if no adapter); append `Bash(<command>)` for every distinct non-null command in `apps[].commands` and `env`. Merge with an existing file: keep its rules, add ours, deduplicate; never remove a user deny rule. Keep other keys untouched.
 3. **`CLAUDE.md`**: if it exists, keep it and add or refresh a `## dw workflow` section; otherwise create a short file. Content: one paragraph on the project, "Read `docs/INDEX.md` first", the dw commands, where config lives (`.claude/workflow.json`), and the key commands (env start, per-app test). No duplicated docs.
 4. **`docs/`** per `${CLAUDE_PLUGIN_ROOT}/reference/docs-conventions.md`, without overwriting existing files:
@@ -44,11 +49,11 @@ Collect facts; cite the file each fact comes from. Do not guess: unknown stays `
 
 ## D. Gate
 
-Present to the user, in this order: detected facts (with uncertain items flagged), the questions still open, the Linear changes (labels to create, states to create or checklist), then each file: full content for new files, a diff for modified ones. Run the gate of `${CLAUDE_PLUGIN_ROOT}/reference/agent-relay.md` (notify, explicit approval). Apply requested changes and present again until approved.
+Present to the user, in this order: detected facts (with uncertain items flagged), the questions still open, the Linear changes (Project to create with its name and description, or the existing Project chosen; labels to create; states to create or checklist), then each file: full content for new files, a diff for modified ones. Run the gate of `${CLAUDE_PLUGIN_ROOT}/reference/agent-relay.md` (notify, explicit approval). Apply requested changes and present again until approved.
 
 ## E. Apply
 
-1. Create the Linear labels (and states if possible). Report what was created.
+1. Create the Linear Project if the user chose "create" (team `linear.team`, approved name and description), then the labels (and states if possible). Report what was created, with the Project URL. If the Project name changed on creation (e.g. duplicate), update `linear.project` before writing the files.
 2. Write the files.
 3. Publish with `${CLAUDE_PLUGIN_ROOT}/reference/docs-pr.md`, branch `dw/bootstrap-<YYYY-MM-DD>`, title `chore: set up dw workflow`, paths `CLAUDE.md`, `.claude/workflow.json`, `.claude/settings.json`, `docs/`.
 4. Final message: the PR to review and merge (until it is merged, `.claude/workflow.json` exists only on that branch and the other dw commands refuse to run), the Linear checklist if any state is missing, then "after merging: `git pull`, then `/dw:epic` to start a feature". Notify with `node "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/notify.mjs" "dw: bootstrap done" "Review the dw bootstrap PR"`.

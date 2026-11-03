@@ -18,5 +18,6 @@ Plugin root: `${CLAUDE_PLUGIN_ROOT}`. When a plugin file mentions `${CLAUDE_PLUG
    ```
    Relay `needs_input` rounds until `draft_ready`.
 4. **Gate**: show the Linear Project URL, the list of stories with their acceptance criteria, and the doc files changed. Notify, ask for explicit approval. Loop on changes. On approval send `APPROVED` (+ last changes) and wait for `done` (stories moved to Product Ready).
-5. **Publish** the product docs with `${CLAUDE_PLUGIN_ROOT}/reference/docs-pr.md`: branch `docs/<project-slug>-product`, title `docs(product): <Project name>`, paths `docs/product/`, `docs/glossary.md`, `docs/INDEX.md`.
-6. **Next**: tell the user to review/merge the docs PR and run `/dw:spec <Project name>`.
+5. **Default Project**: ask the user whether this new Project should become the default scope of `/dw:run` (`.claude/workflow.json` → `linear.project`; recommend yes when the current one is finished, unless `null` was set on purpose). If yes, update the file.
+6. **Publish** the product docs with `${CLAUDE_PLUGIN_ROOT}/reference/docs-pr.md`: branch `docs/<project-slug>-product`, title `docs(product): <Project name>`, paths `docs/product/`, `docs/glossary.md`, `docs/INDEX.md`, plus `.claude/workflow.json` if step 5 changed it.
+7. **Next**: tell the user to review/merge the docs PR and run `/dw:spec <Project name>`.

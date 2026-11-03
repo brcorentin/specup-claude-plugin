@@ -104,7 +104,7 @@ Le push et le pull n'utilisent pas ce token : ils passent par tes identifiants g
 
 | Commande | Rôle | Gate humain |
 | :- | :- | :- |
-| `/dw:bootstrap` | Repo existant : scanne et génère `CLAUDE.md`, `.claude/workflow.json`, `.claude/settings.json`, `docs/`, labels Linear. Projet vide : discovery produit, ADR de stack, Project « Fondations ». | Validation avant écriture ; validation de la stack avant tout code |
+| `/dw:bootstrap` | Repo existant : scanne et génère `CLAUDE.md`, `.claude/workflow.json`, `.claude/settings.json`, `docs/`, labels Linear, et te fait choisir le Project Linear de travail (existant, nouveau, ou aucun). Projet vide : discovery produit, ADR de stack, puis tickets Fondations dans un Project existant ou créé (« Fondations » proposé). | Validation avant écriture ; validation de la stack avant tout code |
 | `/dw:epic` | Session avec le product-engineer → Project Linear + user stories | Validation du Project |
 | `/dw:spec <project>` | L'em écrit la spec technique, les ADR et les tickets | Validation avant le dev |
 | `/dw:run` | Boucle séquentielle : ticket prêt → dev → qa (≤ 3 allers-retours) → suivant ; récapitulatif des PR à relire | Relecture et merge des PR |
