@@ -1,4 +1,4 @@
-# corentin-workflow — plugin Claude Code `dw`
+# specup-workflow — plugin Claude Code `dw`
 
 Marketplace Claude Code personnelle contenant un seul plugin, **`dw`** : un workflow de développement multi-agents réutilisable sur des monorepos TypeScript (NestJS, Next.js, Postgres, Turborepo).
 
@@ -8,7 +8,7 @@ Marketplace Claude Code personnelle contenant un seul plugin, **`dw`** : un work
 - Exécution : Claude Code en local (abonnement Max), aucune clé d'API.
 
 ```
-.claude-plugin/marketplace.json     marketplace "corentin-workflow"
+.claude-plugin/marketplace.json     marketplace "specup-workflow"
 plugins/dw/
   .claude-plugin/plugin.json        plugin "dw"
   agents/                           product-engineer, em, dev, qa, doc
@@ -36,7 +36,7 @@ plugins/dw/
 
 ```bash
 claude plugin marketplace add C:/Users/coren/dev/specup-claude-plugin
-claude plugin install dw@corentin-workflow
+claude plugin install dw@specup-workflow
 ```
 
 Une marketplace ajoutée depuis un dossier local est lue **en place** : une modification des fichiers du plugin est prise en compte par `/reload-plugins` dans une session ouverte, ou au démarrage de la session suivante.
@@ -49,14 +49,14 @@ Le repo est privé : Claude Code le clone avec **tes identifiants git** (clé SS
 
 ```bash
 claude plugin marketplace add <owner>/<repo>          # ex. corentinbras/specup-claude-plugin
-claude plugin install dw@corentin-workflow
+claude plugin install dw@specup-workflow
 ```
 
 ## Mise à jour
 
 ```bash
-claude plugin marketplace update corentin-workflow    # récupère le dernier commit de la marketplace
-claude plugin update dw@corentin-workflow             # met à jour le plugin installé
+claude plugin marketplace update specup-workflow    # récupère le dernier commit de la marketplace
+claude plugin update dw@specup-workflow             # met à jour le plugin installé
 ```
 
 Dans une session : `/plugin` → onglet **Installed** → `dw`, puis `/reload-plugins`.
@@ -67,7 +67,7 @@ Côté auteur : incrémente `version` dans `plugins/dw/.claude-plugin/plugin.jso
 
 1. Installer Claude Code, git, Node.js ≥ 20, Docker ; `claude` puis `/login`.
 2. Vérifier l'accès git au repo privé (`git clone` de test).
-3. `claude plugin marketplace add <owner>/<repo>` puis `claude plugin install dw@corentin-workflow`.
+3. `claude plugin marketplace add <owner>/<repo>` puis `claude plugin install dw@specup-workflow`.
 4. Recréer la variable d'environnement `GITHUB_PERSONAL_ACCESS_TOKEN` (voir ci-dessous).
 5. Ouvrir `claude`, lancer `/mcp` et s'authentifier sur Linear.
 6. Dans chaque projet, rien à réinstaller : `.claude/workflow.json`, `.claude/settings.json`, `CLAUDE.md` et `docs/` sont versionnés dans le projet.

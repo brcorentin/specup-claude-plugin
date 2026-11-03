@@ -1,6 +1,6 @@
 {
-  "name": "corentin-workflow",
-  "description": "Corentin Bras's personal Claude Code marketplace: the dw multi-agent development workflow.",
+  "name": "specup-workflow",
+  "description": "SpecUp Claude Code marketplace: the dw multi-agent development workflow.",
   "owner": {
     "name": "Corentin Bras"
   },
