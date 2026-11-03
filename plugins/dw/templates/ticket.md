@@ -22,6 +22,9 @@ Each criterion is testable and maps to at least one automated test (unit or inte
 - [ ] **AC-2** — Given …, when …, then ….
 - [ ] **AC-3 (edge case)** — ….
 
+## Dependencies
+Blocked by: <ID>, <ID> — or "none". Must match the Linear "blocked by" relations exactly (fallback when relations cannot be read).
+
 ## Verification
 Commands to run from the repo root (from `workflow.json` → `apps[].commands`), all must pass:
 ```
