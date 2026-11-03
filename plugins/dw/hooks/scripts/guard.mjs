@@ -3,6 +3,7 @@
 // Denies: force pushes, pushes to the base branch, deletions outside the repository
 // (Bash / PowerShell tools, in dw projects), and forge MCP tools that merge.
 // Reads the hook input JSON on stdin, prints a PreToolUse deny decision on stdout.
+// Fails closed: unreadable input or an internal error denies the call.
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -33,9 +34,47 @@ export function splitSegments(command) {
     words = [];
   };
 
+  const heredocs = []; // pending heredoc delimiters, bodies start at the next newline
+
   for (let i = 0; i < command.length; i++) {
     const c = command[i];
-    if (c === "'") {
+    if (c === '@' && (command[i + 1] === "'" || command[i + 1] === '"') && command[i + 2] === '\n') {
+      // PowerShell here-string: @'...'@ or @"..."@, one opaque word
+      const close = command.indexOf(`\n${command[i + 1]}@`, i + 2);
+      word += close === -1 ? command.slice(i + 3) : command.slice(i + 3, close);
+      hasWord = true;
+      i = close === -1 ? command.length : close + 2;
+    } else if (c === '<' && command[i + 1] === '<' && command[i + 2] !== '<') {
+      // Bash heredoc: remember the delimiter, its body is data, not commands
+      const m = /^<<-?\s*(['"]?)([A-Za-z0-9_.-]+)\1/.exec(command.slice(i));
+      if (m) {
+        heredocs.push({ delim: m[2], dash: m[0].startsWith('<<-') });
+        i += m[0].length - 1;
+      } else {
+        i++;
+      }
+    } else if (c === '\n' && heredocs.length) {
+      pushSegment();
+      let pos = i + 1;
+      for (const h of heredocs) {
+        while (pos < command.length) {
+          const eol = command.indexOf('\n', pos);
+          const line = command.slice(pos, eol === -1 ? command.length : eol);
+          pos = eol === -1 ? command.length : eol + 1;
+          if ((h.dash ? line.trim() : line.replace(/\r$/, '')) === h.delim) break;
+        }
+      }
+      heredocs.length = 0;
+      i = pos - 1;
+    } else if (c === '$' && command[i + 1] === '{') {
+      const end = command.indexOf('}', i + 2);
+      word += end === -1 ? command.slice(i) : command.slice(i, end + 1);
+      hasWord = true;
+      i = end === -1 ? command.length : end;
+    } else if ((c === '(' || c === ')' || c === '}') || (c === '{' && command[i - 1] !== '$' && command[i - 1] !== '@')) {
+      // Grouping and script blocks: their content is checked as separate commands
+      pushSegment();
+    } else if (c === "'") {
       const end = command.indexOf("'", i + 1);
       word += end === -1 ? command.slice(i + 1) : command.slice(i + 1, end);
       hasWord = true;
@@ -91,21 +130,60 @@ const DQ_ESCAPABLE = new Set(['"', '\\', '$', '`']);
 // ---------------------------------------------------------------------------
 // Helpers
 
-const WRAPPERS = new Set(['sudo', 'command', 'builtin', 'exec', 'time', 'nice', 'nohup', 'noglob', 'env', 'timeout', 'stdbuf']);
+const WRAPPERS = new Set(['sudo', 'doas', 'command', 'builtin', 'exec', 'time', 'nice', 'nohup', 'noglob', 'env', 'timeout', 'stdbuf', 'xargs', 'npx', 'bunx']);
+// Wrapper options that take a separate value, per wrapper.
+const WRAPPER_VALUE_OPTS = {
+  sudo: ['-u', '-g', '-C', '-p', '-h', '--user', '--group'],
+  doas: ['-u', '-C'],
+  env: ['-u', '-C', '-S', '--unset', '--chdir'],
+  nice: ['-n', '--adjustment'],
+  timeout: ['-s', '-k', '--signal', '--kill-after'],
+  stdbuf: ['-i', '-o', '-e'],
+  xargs: ['-I', '-L', '-P', '-d', '-n', '-s', '-E', '-a'],
+  npx: ['-p', '--package'],
+};
+// Package runners: "pnpm dlx rimraf x", "pnpm exec rimraf x", "yarn dlx ...".
+const RUNNERS = new Set(['pnpm', 'yarn', 'bun', 'npm']);
+const KEYWORDS = new Set(['then', 'do', 'else', 'elif', 'fi', 'done', 'esac', '!', 'if', 'while', 'until', '&']);
 
 function stripPrefix(words) {
   let i = 0;
   while (i < words.length) {
     const w = words[i];
+    if (KEYWORDS.has(w)) { i++; continue; }
     if (/^[A-Za-z_][A-Za-z0-9_]*=/.test(w)) { i++; continue; }
-    if (WRAPPERS.has(w)) {
+    const name = exeName(w);
+    if (WRAPPERS.has(name)) {
       i++;
-      if (w === 'timeout') { while (i < words.length && words[i].startsWith('-')) i++; i++; }
+      while (i < words.length && words[i].startsWith('-')) {
+        if (WRAPPER_VALUE_OPTS[name]?.includes(words[i])) i++;
+        i++;
+      }
+      if (name === 'timeout' && i < words.length) i++; // duration
       continue;
     }
+    if (RUNNERS.has(name) && ['dlx', 'exec', 'x'].includes(words[i + 1])) { i += 2; continue; }
     break;
   }
   return words.slice(i);
+}
+
+// Commands that interpret a string argument as a new command line.
+function nestedCommand(cmd, args) {
+  if (['bash', 'sh', 'zsh', 'dash', 'ksh'].includes(cmd)) {
+    const k = args.findIndex((a) => /^-[a-z]*c[a-z]*$/.test(a));
+    return k !== -1 ? args[k + 1] ?? '' : null;
+  }
+  if (['pwsh', 'powershell'].includes(cmd)) {
+    const k = args.findIndex((a) => /^-(c|command)$/i.test(a));
+    return k !== -1 ? args.slice(k + 1).join(' ') : null;
+  }
+  if (cmd === 'cmd') {
+    const k = args.findIndex((a) => /^\/[ck]$/i.test(a));
+    return k !== -1 ? args.slice(k + 1).join(' ') : null;
+  }
+  if (cmd === 'eval' || cmd === 'invoke-expression' || cmd === 'iex') return args.join(' ');
+  return null;
 }
 
 function exeName(word) {
@@ -147,7 +225,7 @@ function isInside(child, parent) {
 // ---------------------------------------------------------------------------
 // Rules
 
-const DELETE_COMMANDS = new Set(['rm', 'rmdir', 'unlink', 'shred', 'del', 'erase', 'rd', 'remove-item', 'ri']);
+const DELETE_COMMANDS = new Set(['rm', 'rmdir', 'unlink', 'shred', 'del', 'erase', 'rd', 'remove-item', 'ri', 'rimraf', 'del-cli', 'trash', 'trash-put']);
 const PS_PATH_PARAMS = new Set(['-path', '-literalpath', '-lp']);
 
 function checkGitPush(args, ctx, cwd) {
@@ -212,8 +290,7 @@ function checkGitPush(args, ctx, cwd) {
   return null;
 }
 
-function checkDelete(cmd, args, ctx, cwd) {
-  const root = ctx.repoRoot(cwd);
+function checkDelete(cmd, args, root, cwd) {
   if (!root) return null;
   const targets = [];
   const isPs = cmd === 'remove-item' || cmd === 'ri';
@@ -221,10 +298,15 @@ function checkDelete(cmd, args, ctx, cwd) {
   for (let k = 0; k < args.length; k++) {
     const a = args[k];
     if (!endOfOptions && a === '--') { endOfOptions = true; continue; }
+    const psParam = isPs && /^(-[a-z]+):(.+)$/i.exec(a); // colon form: -Path:../x
+    if (psParam && PS_PATH_PARAMS.has(psParam[1].toLowerCase())) { targets.push(...psParam[2].split(',')); continue; }
     if (isPs && PS_PATH_PARAMS.has(a.toLowerCase())) { if (args[k + 1]) targets.push(...args[k + 1].split(',')); k++; continue; }
     if (!endOfOptions && a.startsWith('-')) continue;
     if ((cmd === 'del' || cmd === 'erase' || cmd === 'rd') && a.startsWith('/') && a.length <= 3) continue; // cmd.exe switches like /s /q
     targets.push(isPs ? a.split(',')[0] : a);
+  }
+  if (!targets.filter(Boolean).length) {
+    return `cannot verify what "${cmd}" deletes (no explicit path, e.g. pipeline input). Pass explicit paths inside the repository.`;
   }
   for (const t of targets) {
     if (!t) continue;
@@ -238,13 +320,21 @@ function checkDelete(cmd, args, ctx, cwd) {
   return null;
 }
 
-export function checkShell(command, ctx, startCwd) {
+export function checkShell(command, ctx, startCwd, root = ctx.repoRoot(startCwd), depth = 0) {
+  // root is fixed by the session's working directory: a "cd" into another repo does not move it.
   let cwd = startCwd;
   for (const segment of splitSegments(command)) {
     const words = stripPrefix(segment);
     if (!words.length) continue;
     const cmd = exeName(words[0]);
     const args = words.slice(1);
+    const nested = nestedCommand(cmd, args);
+    if (nested !== null) {
+      if (depth > 3) return 'command nesting too deep to verify.';
+      const reason = checkShell(nested, ctx, cwd, root, depth + 1);
+      if (reason) return reason;
+      continue;
+    }
     if (cmd === 'cd' || cmd === 'set-location' || cmd === 'sl' || cmd === 'pushd' || cmd === 'chdir') {
       const dest = args.find((a) => !a.startsWith('-'));
       cwd = dest ? resolveTarget(dest, cwd) ?? cwd : os.homedir();
@@ -256,16 +346,17 @@ export function checkShell(command, ctx, startCwd) {
       continue;
     }
     if (DELETE_COMMANDS.has(cmd)) {
-      const reason = checkDelete(cmd, args, ctx, cwd);
+      const reason = checkDelete(cmd, args, root, cwd);
       if (reason) return reason;
     }
   }
   return null;
 }
 
-// Tools that merge or accept a pull/merge request, or enable auto-merge.
+// Tools that merge, accept or approve a pull/merge request, or enable auto-merge.
 // Read tools such as list_merge_requests or get_merge_request stay allowed.
-const MERGE_TOOL = /^(merge|accept)|auto_?merge/i;
+const MERGE_TOOL = /merge|accept|approve/i;
+const READ_TOOL = /^(list|get|search|read)_|_read$/i;
 const FORGE_SERVER = /^mcp__(plugin_dw_[A-Za-z0-9-]+|forge|[A-Za-z0-9_-]*?(?:github|gitlab|gitea|bitbucket|forgejo)[A-Za-z0-9-]*)__/i;
 
 export function checkMcp(toolName) {
@@ -273,7 +364,7 @@ export function checkMcp(toolName) {
   const server = FORGE_SERVER.exec(toolName);
   if (!server) return null;
   const tool = toolName.slice(server[0].length);
-  if (MERGE_TOOL.test(tool)) return `the dw workflow never merges pull/merge requests (${toolName}). The human reviewer merges.`;
+  if (MERGE_TOOL.test(tool) && !READ_TOOL.test(tool)) return `the dw workflow never merges pull/merge requests (${toolName}). The human reviewer merges.`;
   return null;
 }
 
@@ -342,15 +433,14 @@ async function main() {
   try {
     input = JSON.parse(raw);
   } catch {
-    process.stderr.write('dw guard: invalid hook input, skipped\n');
-    process.exit(1);
+    deny('invalid hook input, the call could not be verified (fail closed).');
+    return;
   }
   try {
     const reason = evaluate(input, realContext());
     if (reason) deny(reason);
   } catch (err) {
-    process.stderr.write(`dw guard: internal error, check skipped: ${err?.message ?? err}\n`);
-    process.exit(1);
+    deny(`internal error, the call could not be verified (fail closed): ${err?.message ?? err}`);
   }
 }
 

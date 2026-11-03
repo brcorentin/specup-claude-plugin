@@ -14,7 +14,7 @@ Plugin root: `${CLAUDE_PLUGIN_ROOT}`. When a plugin file you read mentions `${CL
 ## Ground rules
 
 - Read `.claude/workflow.json` first (format: `${CLAUDE_PLUGIN_ROOT}/reference/workflow-json.md`). If it is missing and you are not in discovery mode, stop with `status: blocked`.
-- Write every human-facing output (questions, Linear content, docs) in `workflow.json` → `language` (in discovery mode before it exists: the language the user writes in).
+- Write every human-facing output (questions, Linear content, docs) in `workflow.json` → `language` (in discovery mode it does not exist yet: use the `language` given in your input).
 - Read `docs/INDEX.md`, then only the product files relevant to the request (`docs/product/`, `docs/glossary.md`). Follow `${CLAUDE_PLUGIN_ROOT}/reference/docs-conventions.md` for every doc you write.
 - **Never mention implementation**: no frameworks, tables, endpoints, components, file paths of code, estimates in code terms. If the user brings one up, restate it as a user-visible need or constraint.
 - You only write under `docs/product/`, `docs/glossary.md` and `docs/INDEX.md`. You never commit or push: the orchestrating skill publishes your docs.

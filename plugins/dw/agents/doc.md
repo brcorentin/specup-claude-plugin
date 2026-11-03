@@ -35,10 +35,10 @@ Plugin root: `${CLAUDE_PLUGIN_ROOT}`. When a plugin file you read mentions `${CL
 ## Mode `project` (inputs: Linear Project name)
 
 1. Load the Project, its stories and tickets; check that all tickets are Done. If not, list the remaining ones in the result and document only what is merged.
-2. Update: `docs/product/features/<project-slug>.md` (current behaviour, stories IDs), `docs/architecture/overview.md` (if the Project changed structure or data flow), `docs/modules/*` for every impacted app (as in mode `modules`), `docs/glossary.md`, `docs/specs/<project-slug>.md` frontmatter (`updated`, tickets) plus a final "Delivered" note listing deviations from the spec, `docs/INDEX.md`.
+2. Update: `docs/product/features/<project-slug>.md` (current behaviour, stories IDs), `docs/architecture/overview.md` (if the Project changed structure or data flow), `docs/modules/*` for every impacted app (as in mode `modules`), `docs/glossary.md`, `docs/specs/<project-slug>.md` frontmatter (`updated`, `tickets`, and `delivered: YYYY-MM-DD`, the marker `/dw:run` checks) plus a final "Delivered" note listing deviations from the spec, `docs/INDEX.md`.
 3. Check every path cited in the docs you touched still exists (`git ls-files`); fix dead references.
 4. Publish with branch `docs/<project-slug>-final`, title `docs: <Project name>`.
-5. Post `[dw:doc] documented` + PR URL on every Done ticket of the Project that does not already have it, and a short comment on the Project if the Linear tools allow it.
+5. Post `[dw:doc] documented` + PR URL on every Done ticket of the Project that does not already have it.
 
 ## Result block
 

@@ -100,3 +100,42 @@ test('rules are scoped to dw projects, except merges on dw servers', () => {
   assert.equal(mcp('mcp__github__merge_pull_request', outside), null);
   assert.match(mcp('mcp__plugin_dw_github__merge_pull_request', outside) ?? '', /never merges/);
 });
+
+test('nested shells, grouping, keywords and wrappers are checked', () => {
+  for (const cmd of [
+    'for b in x; do git push origin main; done',
+    '(git push -f)',
+    '{ git push -f; }',
+    'if true; then git push --force; fi',
+    'env -i git push -f',
+    'sudo -u bob git push -f',
+    'nice -n 5 git push -f',
+    'bash -c "git push --force"',
+    'sh -c \'git push origin main\'',
+    'powershell -Command "git push -f"',
+    'cmd /c git push -f',
+    'eval "git push -f"',
+  ]) {
+    assert.ok(bash(cmd), cmd);
+  }
+  assert.match(bash('cd .. && rm -rf other-repo/src') ?? '', /outside the repository/);
+  assert.match(bash('npx rimraf ../x') ?? '', /outside the repository/);
+  assert.match(bash('pnpm dlx rimraf ../x') ?? '', /outside the repository/);
+  assert.match(bash('find . -name x | xargs rm') ?? '', /no explicit path/);
+  assert.match(ps('Get-ChildItem ..\\x | Remove-Item -Recurse') ?? '', /no explicit path/);
+  assert.match(ps('Remove-Item -Path:..\\x -Recurse') ?? '', /outside the repository/);
+});
+
+test('heredoc and here-string bodies are data, not commands', () => {
+  assert.equal(bash("git commit -q -F - <<'EOF'\nfix: stop rm -rf ../x and git push -f\nEOF\ngit status"), null);
+  assert.match(bash("cat <<EOF\nhello\nEOF\ngit push -f") ?? '', /force push/);
+  assert.equal(ps("git commit -m @'\nnever git push --force\n'@"), null);
+  assert.equal(bash('echo ${HOME} && ls'), null);
+});
+
+test('merge, accept and approve tools are denied; read tools allowed', () => {
+  assert.match(mcp('mcp__gitlab__pull_request_merge') ?? '', /never merges/);
+  assert.match(mcp('mcp__forge__approve_merge_request') ?? '', /never merges/);
+  assert.equal(mcp('mcp__gitlab__get_merge_request'), null);
+  assert.equal(mcp('mcp__gitlab__list_merge_requests'), null);
+});

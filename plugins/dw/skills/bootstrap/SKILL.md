@@ -23,8 +23,9 @@ Run and check, stop with a clear message on failure:
 1. `git rev-parse --show-toplevel` — inside a git repository; work from its root.
 2. `git remote -v` — at least one remote. If none, ask the user to add one (`git remote add origin <url>`) and stop.
 3. `git status --porcelain` — clean tree (otherwise ask the user to commit or stash first).
-4. Linear MCP reachable: call a read-only Linear tool (list teams). On failure: tell the user to run `/mcp`, authenticate `plugin:dw:linear`, and rerun.
-5. Forge reachable (GitHub by default): call `mcp__plugin_dw_github__get_me`. On failure, warn (PRs will fall back to compare links) and continue only if the user agrees. See the README section on `GITHUB_PERSONAL_ACCESS_TOKEN`.
+4. **Sync the base branch** before anything is written: `git fetch <remote>`; base = `git ls-remote --symref <remote> HEAD` (default branch), else `main`. If `<remote>/<base>` exists: `git switch <base>` (tracking it) and `git pull --ff-only <remote> <base>`; a local branch with unrelated history → stop and explain. If the remote has no branch at all, stay on the local `<base>` (empty-project publishing handles it).
+5. Linear MCP reachable: call a read-only Linear tool (list teams). On failure: tell the user to run `/mcp`, authenticate `plugin:dw:linear`, and rerun.
+6. Forge reachable: run the `check` operation of `${CLAUDE_PLUGIN_ROOT}/reference/forges/<type>.md`, the type being deduced from the remote host (`github.com` → `github`). On failure or missing adapter, warn (PRs will use the fallback of `${CLAUDE_PLUGIN_ROOT}/reference/forges/README.md`) and continue only if the user agrees.
 
 ## 2. Detect the mode
 
@@ -36,8 +37,8 @@ Argument: `$ARGUMENTS` (`--mode existing|empty` forces the mode).
 If `.claude/workflow.json` already exists, it is an **update**: in existing mode, re-scan and present a diff against the current files instead of new files; keep the user's manual edits unless the scan contradicts them.
 
 Tell the user which mode you detected and why, then follow:
-- existing → `${CLAUDE_SKILL_DIR}/existing-repo.md`
-- empty → `${CLAUDE_SKILL_DIR}/empty-project.md`
+- existing → `${CLAUDE_PLUGIN_ROOT}/skills/bootstrap/existing-repo.md`
+- empty → `${CLAUDE_PLUGIN_ROOT}/skills/bootstrap/empty-project.md`
 
 ## Hard rules
 

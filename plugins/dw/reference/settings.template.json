@@ -17,6 +17,9 @@
       "Bash(git push -u {{remote}} *)",
       "Bash(git push {{remote}} *)",
       "Bash(git stash *)",
+      "Bash(git merge *)",
+      "Bash(git ls-remote *)",
+      "Bash(git symbolic-ref *)",
       "Bash(git ls-files *)",
       "Bash({{packageManager}} install *)",
       "Bash({{packageManager}} run *)",
@@ -24,7 +27,7 @@
       "Bash({{packageManager}} turbo *)",
       "Bash(npx tsc *)",
       "Bash(docker compose *)",
-      "Bash(node *notify.mjs *)",
+      "Bash(node *notify.mjs*)",
       "PowerShell(git status *)",
       "PowerShell(git diff *)",
       "PowerShell(git log *)",
@@ -35,12 +38,13 @@
       "PowerShell(git add *)",
       "PowerShell(git commit *)",
       "PowerShell(git push -u {{remote}} *)",
+      "PowerShell(git push {{remote}} *)",
+      "PowerShell(git branch *)",
+      "PowerShell(git rev-parse *)",
+      "PowerShell(git merge *)",
+      "PowerShell(git ls-remote *)",
       "PowerShell(docker compose *)",
-      "mcp__plugin_dw_linear__*",
-      "mcp__plugin_dw_github__create_pull_request",
-      "mcp__plugin_dw_github__list_pull_requests",
-      "mcp__plugin_dw_github__pull_request_read",
-      "mcp__plugin_dw_github__get_me"
+      "mcp__plugin_dw_linear__*"
     ],
     "deny": [
       "Bash(git push --force *)",
@@ -51,7 +55,16 @@
       "Bash(git push {{remote}} HEAD:{{baseBranch}} *)",
       "PowerShell(git push --force *)",
       "PowerShell(git push -f *)",
-      "mcp__plugin_dw_github__merge_pull_request"
+      "Bash(git branch -D *)",
+      "Bash(git branch -d *)",
+      "Bash(git branch --delete *)",
+      "Bash(git push --delete *)",
+      "Bash(git push -d *)",
+      "Bash(git rebase *)",
+      "Bash(git reset --hard *)",
+      "PowerShell(git branch -D *)",
+      "PowerShell(git rebase *)",
+      "PowerShell(git reset --hard *)"
     ]
   }
 }

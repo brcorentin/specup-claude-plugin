@@ -8,7 +8,7 @@
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/",
       "headers": {
-        "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}",
+        "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN:-}",
         "X-MCP-Tools": "create_pull_request,list_pull_requests,pull_request_read,get_me"
       }
     }

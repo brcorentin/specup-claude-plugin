@@ -25,6 +25,10 @@ plugins/dw/
 - `git` et **Node.js ≥ 20** dans le `PATH` (les hooks sont des scripts Node, cross-platform).
 - Sous Windows : Git for Windows (fournit Git Bash, utilisé par Claude Code).
 - Docker (pour Postgres des tests d'intégration des projets cibles).
+- Côté **Linear**, pour chaque équipe utilisée (`/dw:bootstrap` affiche la checklist) :
+  - les statuts du workflow : Backlog, Product Ready, Todo, In Progress, In QA, QA Failed, Ready for Review, Done (ou tes propres noms, mappés dans `.claude/workflow.json`) ;
+  - l'intégration GitHub activée, avec « passer à Done au merge de la PR ». Sans elle, aucun bloqueur n'atteint Done et `/dw:run` ne trouve jamais de ticket prêt ;
+  - recommandé : « auto-close parent issues », pour qu'une user story passe à Done quand tous ses tickets le sont.
 
 ## Installation
 
@@ -83,7 +87,7 @@ Si tu as déjà un connecteur Linear ailleurs (claude.ai, config utilisateur), l
 
 ### GitHub (Personal Access Token)
 
-Le serveur MCP distant de GitHub ne propose pas l'OAuth à Claude Code : il faut un PAT. Le plugin ne charge que les outils de lecture et de création de PR (en-tête `X-MCP-Tools`) ; l'outil de merge n'est pas exposé, et un hook le bloque de toute façon.
+Le serveur MCP distant de GitHub ne propose pas l'OAuth à Claude Code : il faut un PAT. Le plugin ne charge que les outils de lecture et de création de PR (en-tête `X-MCP-Tools`) ; l'outil de merge n'est pas exposé. En plus, le hook `guard.mjs` refuse tout outil MCP de forge dont le nom contient `merge`, `accept` ou `approve`, sauf les outils de lecture.
 
 1. GitHub → Settings → Developer settings → **Fine-grained tokens** → Generate new token.
    - Repository access : uniquement les repos des projets.
@@ -105,7 +109,11 @@ Le push et le pull n'utilisent pas ce token : ils passent par tes identifiants g
 | `/dw:spec <project>` | L'em écrit la spec technique, les ADR et les tickets | Validation avant le dev |
 | `/dw:run` | Boucle séquentielle : ticket prêt → dev → qa (≤ 3 allers-retours) → suivant ; récapitulatif des PR à relire | Relecture et merge des PR |
 | `/dw:ask <question>` | Répond depuis `docs/` en citant les fichiers | — |
-| `/dw:doc <project>` | Lance l'agent doc (PR de documentation) | Relecture de la PR |
+| `/dw:doc [project]` | Avec un Project : doc de fin de Project. Sans argument : met `docs/modules/` à jour pour les tickets mergés pas encore documentés. Ouvre une PR de documentation. (`/dw:run` le fait aussi automatiquement au démarrage.) | Relecture de la PR |
+
+Rien n'est jamais poussé sur la branche de base : bootstrap, doc produit, spec et doc de modules arrivent chacun par une PR que tu merges. Merge la PR de bootstrap avant `/dw:epic`, celle de la doc produit avant `/dw:spec`, et celle de la spec avant `/dw:run`.
+
+Garde-fous (hook `guard.mjs`, actif uniquement dans les projets qui ont un `.claude/workflow.json`) : pas de force-push, pas de push sur la branche de base, pas de suppression hors du repo, pas de merge via MCP. En cas d'erreur interne, le hook refuse l'appel par sécurité.
 
 Détails : `plugins/dw/reference/` (schéma de `workflow.json`, machine à états Linear, conventions de documentation, adaptateurs forge).
 

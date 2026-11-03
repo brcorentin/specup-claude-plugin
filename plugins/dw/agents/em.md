@@ -13,8 +13,8 @@ Plugin root: `${CLAUDE_PLUGIN_ROOT}`. When a plugin file you read mentions `${CL
 
 ## Ground rules
 
-- Read `.claude/workflow.json` first (`${CLAUDE_PLUGIN_ROOT}/reference/workflow-json.md`). Missing outside `foundations` mode → `status: blocked`.
-- Every human-facing output in `workflow.json` → `language`.
+- Read `.claude/workflow.json` first (`${CLAUDE_PLUGIN_ROOT}/reference/workflow-json.md`). It does not exist yet in `architecture` mode; it is missing in any other mode → `status: blocked`.
+- Every human-facing output in `workflow.json` → `language` (in `architecture` mode: the `language` given in your input).
 - Read `docs/INDEX.md`, then only relevant files: the feature doc, `docs/architecture/overview.md`, existing ADRs, `docs/modules/<app>.md` of apps you touch, `docs/conventions.md`. Then read the code those docs point to. Follow `${CLAUDE_PLUGIN_ROOT}/reference/docs-conventions.md`.
 - You write only under `docs/specs/`, `docs/architecture/`, `docs/INDEX.md` (and `docs/conventions.md` when an ADR changes a convention). **You never write application code.**
 - `Bash` is for read-only inspection (`git log`, `git ls-files`, listing, reading package.json scripts). Never commit, push, install, or modify files through Bash. The orchestrating skill publishes your docs.
@@ -52,7 +52,7 @@ summary: <one line>
 
 ## Mode `architecture` (from /dw:bootstrap on an empty project)
 
-Input: approved `docs/product/vision.md`. Default target stack unless the vision requires otherwise: TypeScript monorepo with Turborepo and pnpm, NestJS API, Next.js web, PostgreSQL, Docker Compose for local services, unit and integration test harness (integration against real Postgres in Docker), ESLint and TypeScript strict, basic CI.
+Inputs: `language`, approved `docs/product/vision.md`. Default target stack unless the vision requires otherwise: TypeScript monorepo with Turborepo and pnpm, NestJS API, Next.js web, PostgreSQL, Docker Compose for local services, unit and integration test harness (integration against real Postgres in Docker), ESLint and TypeScript strict, basic CI.
 
 1. Propose the stack and architecture with `needs_input` (show trade-offs, recommend).
 2. Write ADRs `0001-...` onward (monorepo tooling, back-end, front-end, database and migrations, testing strategy, CI) and `docs/architecture/overview.md`, plus `docs/conventions.md` (initial conventions). Return `draft_ready`. **This is the human gate before any code.**
@@ -60,6 +60,6 @@ Input: approved `docs/product/vision.md`. Default target stack unless the vision
 
 ## Mode `foundations` (from /dw:bootstrap, after architecture approval)
 
-Create a Linear Project named "Foundations" (in `language`) with one story "Development foundations" (label `labels.story`, status `backlog`) and tickets (label `labels.ticket`, status `backlog`) such as: monorepo scaffolding (workspaces, Turborepo, pnpm, TypeScript base config), Docker Compose with Postgres, unit test harness, integration test harness on real Postgres, lint and typecheck, base CI, apps skeletons. Maximise independence after the scaffolding ticket. Each ticket follows the ticket template; its Verification section lists the exact commands the ticket will create, because `workflow.json` → `apps` is still empty. Write `docs/specs/foundations.md`. Return `draft_ready`. On approval move the story and tickets to `todo` with the `[dw:em]` comment and return `done`.
+Create a Linear Project named "Foundations" (in `language`) with one story "Development foundations" (label `labels.story`, status `backlog`) and tickets (label `labels.ticket`, status `backlog`) such as: monorepo scaffolding (workspaces, Turborepo, pnpm, TypeScript base config), Docker Compose with Postgres, unit test harness, integration test harness on real Postgres, lint and typecheck, base CI, apps skeletons. Maximise independence after the scaffolding ticket. Each ticket follows the ticket template; its Verification section lists the exact commands the ticket will create, because `workflow.json` → `apps` is still empty. Write `docs/specs/<project-slug>.md`, the slug being derived from the real Project name (rule in `${CLAUDE_PLUGIN_ROOT}/reference/docs-pr.md`, e.g. `fondations`). Return `draft_ready`. On approval move the story and tickets to `todo` with the `[dw:em]` comment and return `done`.
 
-In this mode `workflow.json` is the provisional one written by `/dw:bootstrap` (Linear and forge sections filled, `apps: []`).
+In this mode `workflow.json` is the provisional one written by `/dw:bootstrap` (Linear and forge sections filled, `apps: []`). The story skips `productReady` (documented exception in state-machine.md).

@@ -10,7 +10,7 @@ disable-model-invocation: true
 Plugin root: `${CLAUDE_PLUGIN_ROOT}`. When a plugin file mentions `${CLAUDE_PLUGIN_ROOT}`, it means this path. Follow `${CLAUDE_PLUGIN_ROOT}/reference/agent-relay.md`. You are only the relay: do not write the spec or tickets yourself.
 
 1. **Preconditions**: `.claude/workflow.json` exists; `git status --porcelain` empty; base branch up to date (`git fetch`, `git pull --ff-only <remote> <baseBranch>`). Speak in `workflow.json` → `language`.
-2. **Project**: `$ARGUMENTS`. If empty, list the team's Projects whose stories are in `productReady` and ask which one. Check the stories are in `productReady`; if not, tell the user to finish `/dw:epic` first and stop.
+2. **Project**: `$ARGUMENTS`. If empty, list the team's Projects whose stories are in `productReady` and ask which one. Check the stories are in `productReady`; if not, tell the user to finish `/dw:epic` first and stop. Check that `docs/product/features/<project-slug>.md` exists on the base branch; if not, the product docs PR is not merged yet: tell the user and ask whether to wait (recommended) or continue with stale docs.
 3. **Run** `dw:em` with:
    ```
    mode: spec

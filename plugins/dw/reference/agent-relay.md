@@ -1,5 +1,7 @@
 # Procedure: run a dw agent and relay it to the user
 
+`${CLAUDE_PLUGIN_ROOT}` is the plugin root given by the skill.
+
 Subagents cannot talk to the user. The skill running in the main conversation is the relay. It **never does the agent's work itself**: it spawns, relays, gates, and publishes.
 
 ## Spawn
@@ -37,4 +39,4 @@ If `SendMessage` is unavailable, spawn a new agent of the same type with the sam
 
 ## After the agent is done
 
-Publish the docs it left in the working tree with `reference/docs-pr.md`, then tell the user which PR to review and merge, and which command comes next.
+Publish the docs it left in the working tree with `${CLAUDE_PLUGIN_ROOT}/reference/docs-pr.md`, then tell the user which PR to review and merge, and which command comes next.

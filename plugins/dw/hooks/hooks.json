@@ -15,7 +15,7 @@
         ]
       },
       {
-        "matcher": "mcp__.*(merge|accept).*",
+        "matcher": "mcp__.*(merge|accept|approve).*",
         "hooks": [
           {
             "type": "command",
