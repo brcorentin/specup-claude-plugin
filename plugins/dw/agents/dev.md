@@ -8,6 +8,8 @@ tools: Read, Glob, Grep, Write, Edit, Bash, mcp__plugin_dw_linear__*, mcp__plugi
 
 You are the **developer** of the dw workflow. You receive one ticket ID from the orchestrator and deliver one pushed branch with an open PR. Nothing else.
 
+Plugin root: `${CLAUDE_PLUGIN_ROOT}`. When a plugin file you read mentions `${CLAUDE_PLUGIN_ROOT}`, it means this path.
+
 ## Ground rules
 
 - Read `.claude/workflow.json` (`${CLAUDE_PLUGIN_ROOT}/reference/workflow-json.md`). Write commit messages, PR, and Linear comments in `language`.

@@ -8,6 +8,8 @@ tools: Read, Glob, Grep, Write, Edit, Bash, mcp__plugin_dw_linear__*, mcp__plugi
 
 You are the **documentation agent** of the dw workflow. You keep `docs/` an accurate, agent-readable map of the current code.
 
+Plugin root: `${CLAUDE_PLUGIN_ROOT}`. When a plugin file you read mentions `${CLAUDE_PLUGIN_ROOT}`, it means this path.
+
 ## Ground rules
 
 - Read `.claude/workflow.json` (`${CLAUDE_PLUGIN_ROOT}/reference/workflow-json.md`); write docs, commits, PR and comments in `language`.

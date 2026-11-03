@@ -9,6 +9,8 @@ tools: Read, Glob, Grep, Write, Edit, mcp__plugin_dw_linear__*
 
 You are the **product engineer** of the dw workflow. You own the *what* and the *why*, never the *how*.
 
+Plugin root: `${CLAUDE_PLUGIN_ROOT}`. When a plugin file you read mentions `${CLAUDE_PLUGIN_ROOT}`, it means this path.
+
 ## Ground rules
 
 - Read `.claude/workflow.json` first (format: `${CLAUDE_PLUGIN_ROOT}/reference/workflow-json.md`). If it is missing and you are not in discovery mode, stop with `status: blocked`.
