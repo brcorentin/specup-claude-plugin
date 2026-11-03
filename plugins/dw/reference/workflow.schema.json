@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dw/workflow.schema.json",
+  "title": "dw project workflow configuration (.claude/workflow.json)",
+  "type": "object",
+  "required": ["version", "language", "linear", "forge", "packageManager", "apps", "qa", "docs"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "language": {
+      "type": "string",
+      "description": "BCP 47 language of every human-facing output (tickets, docs, reports, PRs, chat). Example: fr, en.",
+      "minLength": 2
+    },
+    "linear": {
+      "type": "object",
+      "required": ["team", "statuses", "labels"],
+      "additionalProperties": false,
+      "properties": {
+        "team": { "type": "string", "description": "Linear team key (e.g. ENG) or exact team name." },
+        "project": { "type": ["string", "null"], "description": "Default Linear Project name for /dw:run. null = all Projects of the team." },
+        "statuses": {
+          "type": "object",
+          "description": "Role -> exact Linear workflow state name in this team.",
+          "required": ["backlog", "productReady", "todo", "inProgress", "inQa", "qaFailed", "readyForReview", "done"],
+          "additionalProperties": false,
+          "properties": {
+            "backlog": { "type": "string" },
+            "productReady": { "type": "string" },
+            "todo": { "type": "string" },
+            "inProgress": { "type": "string" },
+            "inQa": { "type": "string" },
+            "qaFailed": { "type": "string" },
+            "readyForReview": { "type": "string" },
+            "done": { "type": "string" }
+          }
+        },
+        "labels": {
+          "type": "object",
+          "description": "Role -> exact Linear label name.",
+          "required": ["story", "ticket", "escalated", "docs"],
+          "additionalProperties": false,
+          "properties": {
+            "story": { "type": "string" },
+            "ticket": { "type": "string" },
+            "escalated": { "type": "string" },
+            "docs": { "type": "string" }
+          }
+        }
+      }
+    },
+    "forge": {
+      "type": "object",
+      "required": ["type", "remote", "owner", "repo", "baseBranch"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "description": "Forge adapter: reference/forges/<type>.md. Shipped: github.", "default": "github" },
+        "remote": { "type": "string", "description": "git remote used for fetch/pull/push.", "default": "origin" },
+        "host": { "type": "string", "description": "Web host of the forge, used for links. Default per adapter (github.com)." },
+        "owner": { "type": "string", "description": "Owner / organisation / group." },
+        "repo": { "type": "string", "description": "Repository name." },
+        "baseBranch": { "type": "string", "description": "Branch every ticket branches from and targets.", "default": "main" }
+      }
+    },
+    "packageManager": { "enum": ["pnpm", "npm", "yarn", "bun"] },
+    "monorepo": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tool": { "enum": ["turborepo", "nx", "workspaces", "none"] }
+      }
+    },
+    "env": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start": { "type": ["string", "null"], "description": "Starts local dependencies (Postgres...). Example: docker compose up -d --wait" },
+        "stop": { "type": ["string", "null"] }
+      }
+    },
+    "apps": {
+      "type": "array",
+      "description": "Apps and packages of the monorepo.",
+      "items": {
+        "type": "object",
+        "required": ["name", "path", "kind", "label", "commands"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "path": { "type": "string", "description": "Path from the repo root, forward slashes." },
+          "kind": { "enum": ["app", "package"] },
+          "label": { "type": "string", "description": "Linear label for tickets touching this app (e.g. app:api)." },
+          "commands": {
+            "type": "object",
+            "description": "Commands run from the repo root. null = not available.",
+            "additionalProperties": false,
+            "properties": {
+              "build": { "type": ["string", "null"] },
+              "lint": { "type": ["string", "null"] },
+              "typecheck": { "type": ["string", "null"] },
+              "test": { "type": ["string", "null"], "description": "Unit tests." },
+              "testIntegration": { "type": ["string", "null"], "description": "Integration tests (real Postgres in Docker). Requires env.start." }
+            }
+          }
+        }
+      }
+    },
+    "qa": {
+      "type": "object",
+      "required": ["maxIterations"],
+      "additionalProperties": false,
+      "properties": {
+        "maxIterations": { "type": "integer", "minimum": 1, "default": 3, "description": "Max dev <-> QA round trips before escalation." }
+      }
+    },
+    "docs": {
+      "type": "object",
+      "required": ["root"],
+      "additionalProperties": false,
+      "properties": {
+        "root": { "type": "string", "default": "docs" }
+      }
+    }
+  }
+}
