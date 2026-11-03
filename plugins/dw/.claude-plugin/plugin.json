@@ -1,0 +1,11 @@
+{
+  "name": "dw",
+  "displayName": "dw — dev workflow",
+  "version": "0.1.0",
+  "description": "Multi-agent development workflow: product discovery, technical specs, sequential dev/QA loop on Linear tickets, PRs through a pluggable forge, and agent-oriented docs.",
+  "author": {
+    "name": "Corentin Bras"
+  },
+  "license": "UNLICENSED",
+  "keywords": ["workflow", "linear", "multi-agent", "qa", "monorepo", "typescript"]
+}

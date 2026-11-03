@@ -1,0 +1,16 @@
+{
+  "name": "corentin-workflow",
+  "description": "Corentin Bras's personal Claude Code marketplace: the dw multi-agent development workflow.",
+  "owner": {
+    "name": "Corentin Bras"
+  },
+  "plugins": [
+    {
+      "name": "dw",
+      "source": "./plugins/dw",
+      "description": "Multi-agent dev workflow: product-engineer, em, dev, qa and doc agents driven by Linear, git and a pluggable forge.",
+      "category": "development",
+      "tags": ["workflow", "linear", "multi-agent", "monorepo", "typescript"]
+    }
+  ]
+}
