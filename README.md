@@ -21,7 +21,7 @@ plugins/dw/
 
 ## Prérequis
 
-- Claude Code ≥ 2.1.281, connecté avec ton abonnement (`claude` puis `/login`).
+- Claude Code ≥ 2.1.295, connecté avec ton abonnement (`claude` puis `/login`).
 - `git` et **Node.js ≥ 20** dans le `PATH` (les hooks sont des scripts Node, cross-platform).
 - Sous Windows : Git for Windows (fournit Git Bash, utilisé par Claude Code).
 - Docker (pour Postgres des tests d'intégration des projets cibles).
@@ -114,5 +114,5 @@ Détails : `plugins/dw/reference/` (schéma de `workflow.json`, machine à état
 ```bash
 claude plugin validate .                 # marketplace + plugin
 claude plugin validate plugins/dw --strict
-node --test plugins/dw/hooks/scripts/    # tests des garde-fous
+node --test plugins/dw/hooks/scripts/guard.test.mjs   # tests des garde-fous
 ```
